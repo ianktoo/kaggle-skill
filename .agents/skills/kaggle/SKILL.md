@@ -3,7 +3,7 @@ name: kaggle
 license: MIT
 metadata:
   author: "Ian Too (https://iantoo.space)"
-  version: "1.2.0"
+  version: "1.2.1"
 description: >
   A full end-to-end Kaggle competition skill. Use this skill whenever a user mentions a Kaggle competition, ML contest, data science challenge, or competitive modeling event — even casually (e.g., "I joined a Kaggle competition", "help me with this ML challenge", "I want to climb the leaderboard"). This skill guides a solo competitor or team through every phase: competition intake, dataset access, exploratory data analysis, feature engineering, model development, ensembling, and final submission. Adapts to the user's proficiency level. Works in Claude Code, Claude.ai, and any coding agent that supports skills. Trigger this skill even when the user only mentions one phase (e.g., "help me with EDA for my Kaggle comp") — always load the full skill to understand context and jump in at the right phase.
 ---
@@ -957,7 +957,18 @@ assert mine.iloc[:, -1].between(0, 1).all(), "Predictions outside [0,1]"
 print("✅ Submission looks good.")
 ```
 
-### 7.3 Submission with Kaggle API
+### 7.3 Submission Strategy
+
+Most Kaggle competitions allow **2 submissions per day** (some allow 5). Treat each one as a deliberate decision.
+
+- **Minimum 2 per day rule** — if you have submissions available and you've made a meaningful change (new features, new model, better ensemble), use them. Don't hoard — idle submissions waste your clock.
+- **Never submit without a CV score** — if you can't measure it locally first, don't submit it.
+- **Track every submission** in `experiments.md`: LB score, what changed, date/time.
+- **Never submit two files that are the same** — different random seeds with no feature or architecture change don't count as meaningful.
+- **Save at least 1 submission for the final day** — a last-day ensemble or diversity check can shift your final ranking.
+- **Final 2 selection** — pick one "best public LB" and one "best CV / most diverse ensemble". They often diverge on private LB — having both hedges the shake-up risk.
+
+### 7.4 Submission with Kaggle API
 
 If the API is set up:
 ```bash
@@ -966,7 +977,7 @@ kaggle competitions submit -c [competition-slug] -f my_submission.csv -m "LGB + 
 
 If manual: go to the competition page → Submit Predictions → upload the file.
 
-### 7.4 Final Confirmation
+### 7.5 Final Confirmation
 
 ---
 **🚀 READY TO SUBMIT!**
