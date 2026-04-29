@@ -64,12 +64,6 @@ Plain-English explanations for every term that trips up newcomers. No ML PhD req
 
 **CatBoost** — Gradient boosting that handles categorical features natively. Strong when you have many text-like columns.
 
-**n_estimators** — How many trees to build. More trees = slower training, potentially better accuracy. Use early stopping so you don't have to guess.
-
-**learning_rate** — How much each tree corrects the previous ones. Lower = more trees needed, but usually better final result. Typical range: 0.01–0.1.
-
-**num_leaves** — Controls the complexity of each tree. Higher = model can fit more complex patterns but overfits faster. Typical range: 16–128.
-
 ---
 
 ## Feature Engineering

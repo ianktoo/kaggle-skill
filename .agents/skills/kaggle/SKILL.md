@@ -3,7 +3,7 @@ name: kaggle
 license: MIT
 metadata:
   author: "Ian Too (https://iantoo.space)"
-  version: "1.2.2"
+  version: "2.0.0"
 description: >
   A full end-to-end Kaggle competition skill. Use this skill whenever a user mentions a Kaggle competition, ML contest, data science challenge, or competitive modeling event — even casually (e.g., "I joined a Kaggle competition", "help me with this ML challenge", "I want to climb the leaderboard"). This skill guides a solo competitor or team through every phase: competition intake, dataset access, exploratory data analysis, feature engineering, model development, ensembling, and final submission. Adapts to the user's proficiency level. Works in Claude Code, Claude.ai, and any coding agent that supports skills. Trigger this skill even when the user only mentions one phase (e.g., "help me with EDA for my Kaggle comp") — always load the full skill to understand context and jump in at the right phase.
 ---
@@ -359,28 +359,7 @@ Accept a path like `./data/` or `C:/Users/you/kaggle/titanic/`.
 
 ### 2.2 Verify Files
 
-Run a quick file check:
-```python
-import os, pandas as pd
-
-DATA_DIR = "./data"  # update if needed
-
-files = os.listdir(DATA_DIR)
-print("Files found:", files)
-
-for f in files:
-    if f.endswith(".csv"):
-        df = pd.read_csv(os.path.join(DATA_DIR, f))
-        print(f"\n{f}: {df.shape[0]} rows × {df.shape[1]} cols")
-        print(df.dtypes.value_counts().to_string())
-```
-
-Confirm:
-- `train.csv` and `test.csv` are present
-- `sample_submission.csv` is present (tells us the required format)
-- Row counts make sense
-
-If any files are missing or unreadable, help the user re-download or fix the path before continuing.
+Verify the data folder contains `train.csv`, `test.csv`, and `sample_submission.csv`. Run a quick check and report row/column counts for both train and test. If any files are missing, guide the user back to Phase 2.1 to re-download.
 
 ---
 
@@ -392,124 +371,7 @@ Generate a complete, self-contained EDA Python script for the user to run. Don't
 
 ### 3.1 Generate EDA Script
 
-Write and save `eda.py` in the project root. Adapt column names and target to the competition. The script must cover every item in the EDA checklist:
-
-```python
-"""
-EDA script — [Competition Name]
-Run: python eda.py
-Outputs: eda_report.txt + plots saved to ./eda_plots/
-"""
-
-from config import DATA_DIR, TARGET, PLOTS_DIR
-import os, warnings
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-warnings.filterwarnings("ignore")
-os.makedirs("eda_plots", exist_ok=True)
-report = []
-
-def log(msg):
-    print(msg)
-    report.append(msg)
-
-# ─── LOAD DATA ───────────────────────────────────────────
-train = pd.read_csv(f"{DATA_DIR}/train.csv")
-test  = pd.read_csv(f"{DATA_DIR}/test.csv")
-
-log("=" * 60)
-log(f"TRAIN: {train.shape[0]:,} rows × {train.shape[1]} cols")
-log(f"TEST:  {test.shape[0]:,} rows × {test.shape[1]} cols")
-log(f"TARGET: {TARGET}")
-
-# ─── DTYPES ──────────────────────────────────────────────
-log("\n--- COLUMN TYPES ---")
-log(train.dtypes.value_counts().to_string())
-
-# ─── MISSING VALUES ───────────────────────────────────────
-log("\n--- MISSING VALUES (train) ---")
-miss = train.isnull().sum()
-miss = miss[miss > 0].sort_values(ascending=False)
-miss_pct = (miss / len(train) * 100).round(2)
-log(pd.DataFrame({"count": miss, "pct": miss_pct}).to_string())
-
-log("\n--- MISSING VALUES (test) ---")
-miss_t = test.isnull().sum()
-miss_t = miss_t[miss_t > 0].sort_values(ascending=False)
-log(pd.DataFrame({"count": miss_t, "pct": (miss_t/len(test)*100).round(2)}).to_string())
-
-# ─── TARGET DISTRIBUTION ─────────────────────────────────
-if TARGET in train.columns:
-    log(f"\n--- TARGET: {TARGET} ---")
-    log(train[TARGET].describe().to_string())
-
-    fig, ax = plt.subplots(figsize=(8, 4))
-    if train[TARGET].nunique() <= 20:
-        train[TARGET].value_counts().plot(kind="bar", ax=ax, color="#0ea5e9")
-        ax.set_title(f"Target distribution: {TARGET}")
-    else:
-        train[TARGET].hist(bins=50, ax=ax, color="#0ea5e9")
-        ax.set_title(f"Target distribution: {TARGET}")
-    plt.tight_layout()
-    plt.savefig("eda_plots/target_distribution.png", dpi=100)
-    plt.close()
-
-# ─── NUMERIC FEATURES ────────────────────────────────────
-num_cols = train.select_dtypes(include=np.number).columns.tolist()
-if TARGET in num_cols:
-    num_cols.remove(TARGET)
-
-log(f"\n--- NUMERIC FEATURES ({len(num_cols)}) ---")
-log(train[num_cols].describe().T.to_string())
-
-# Skewness
-skew = train[num_cols].skew().sort_values(ascending=False)
-log("\nSkewness (|> 1| candidates for log transform):")
-log(skew[skew.abs() > 1].to_string())
-
-# Correlation heatmap
-if len(num_cols) > 1:
-    fig, ax = plt.subplots(figsize=(max(8, len(num_cols)), max(6, len(num_cols)-2)))
-    corr = train[num_cols + ([TARGET] if TARGET in train.select_dtypes(include=np.number).columns else [])].corr()
-    sns.heatmap(corr, annot=len(num_cols) <= 15, fmt=".2f", cmap="coolwarm",
-                center=0, square=True, ax=ax)
-    ax.set_title("Correlation Matrix")
-    plt.tight_layout()
-    plt.savefig("eda_plots/correlation_heatmap.png", dpi=100)
-    plt.close()
-
-# ─── CATEGORICAL FEATURES ────────────────────────────────
-cat_cols = train.select_dtypes(include="object").columns.tolist()
-log(f"\n--- CATEGORICAL FEATURES ({len(cat_cols)}) ---")
-for col in cat_cols:
-    n_unique = train[col].nunique()
-    top_val  = train[col].value_counts().index[0] if n_unique > 0 else "N/A"
-    log(f"  {col}: {n_unique} unique | top: {top_val}")
-
-# Train/test distribution mismatch for categoricals
-log("\n--- TRAIN/TEST CATEGORY MISMATCH ---")
-for col in cat_cols:
-    train_vals = set(train[col].dropna().unique())
-    test_vals  = set(test[col].dropna().unique()) if col in test.columns else set()
-    unseen = test_vals - train_vals
-    if unseen:
-        log(f"  {col}: {len(unseen)} unseen test categories: {list(unseen)[:5]}")
-
-# ─── DUPLICATE ROWS ──────────────────────────────────────
-dup_count = train.duplicated().sum()
-log(f"\n--- DUPLICATES: {dup_count} duplicate rows in train ---")
-
-# ─── SAVE REPORT ─────────────────────────────────────────
-with open("eda_report.txt", "w") as f:
-    f.write("\n".join(report))
-
-print("\n✅ EDA complete. Check eda_report.txt and eda_plots/ for outputs.")
-```
-
-Tell the user: **"Run `python eda.py` and paste back the output of `eda_report.txt`. I'll analyze it and give you a full data quality report."**
+Write a complete `eda.py` that imports from `config.py` and covers all checks from `references/eda-checklist.md` in order. Save printed output to `eda_report.txt` and all plots to `./eda_plots/`. Tell the user: *Run `python eda.py` and paste `eda_report.txt` here when done.*
 
 ### 3.2 EDA Report
 
@@ -594,109 +456,13 @@ Ask: **"Which batch do you want to implement first? I'll write the full code."**
 
 ### 4.3 Generate Feature Engineering Script
 
-Write a complete `features.py` script — not snippets. The script should:
-- Load raw data
-- Apply all transformations in a reproducible pipeline
-- Return `X_train`, `y_train`, `X_test` ready for modeling
-- Never fit on the test set
-
-```python
-"""
-Feature engineering — [Competition Name]
-Run: python features.py
-Outputs: train_features.csv, test_features.csv
-"""
-
-from config import DATA_DIR, TARGET, ID_COL, SEED
-import pandas as pd
-import numpy as np
-from sklearn.preprocessing import LabelEncoder
-
-train = pd.read_csv(f"{DATA_DIR}/train.csv")
-test  = pd.read_csv(f"{DATA_DIR}/test.csv")
-
-y = train[TARGET].copy()
-train = train.drop(columns=[TARGET])
-
-# Combine for consistent encoding
-combined = pd.concat([train, test], axis=0).reset_index(drop=True)
-n_train = len(train)
-
-# ─── MISSING VALUE HANDLING ───────────────────────────────
-# Numeric: fill with median (fit on train only)
-num_cols = combined.select_dtypes(include=np.number).columns.tolist()
-if ID_COL and ID_COL in num_cols:
-    num_cols.remove(ID_COL)
-
-for col in num_cols:
-    median_val = combined.iloc[:n_train][col].median()
-    combined[col] = combined[col].fillna(median_val)
-
-# Categorical: fill with mode
-cat_cols = combined.select_dtypes(include="object").columns.tolist()
-for col in cat_cols:
-    mode_val = combined.iloc[:n_train][col].mode()[0]
-    combined[col] = combined[col].fillna(mode_val)
-
-# ─── FEATURE ENGINEERING ──────────────────────────────────
-# TODO: Add engineered features here based on Phase 4 plan
-# Example:
-# combined["ratio_a_b"] = combined["col_a"] / (combined["col_b"] + 1)
-# combined["log_col_a"] = np.log1p(combined["col_a"])
-
-# ─── ENCODING ─────────────────────────────────────────────
-le = LabelEncoder()
-for col in cat_cols:
-    combined[col] = le.fit_transform(combined[col].astype(str))
-
-# ─── SPLIT BACK ───────────────────────────────────────────
-X_train = combined.iloc[:n_train].copy()
-X_test  = combined.iloc[n_train:].reset_index(drop=True).copy()
-
-if ID_COL and ID_COL in X_train.columns:
-    X_train = X_train.drop(columns=[ID_COL])
-    X_test  = X_test.drop(columns=[ID_COL])
-
-print(f"Train features: {X_train.shape}")
-print(f"Test features:  {X_test.shape}")
-print(f"Target:         {y.shape}")
-
-# Save
-X_train["__target__"] = y.values
-X_train.to_csv("train_features.csv", index=False)
-X_test.to_csv("test_features.csv", index=False)
-print("✅ Features saved: train_features.csv, test_features.csv")
-```
+Write `features.py` that: imports `DATA_DIR`, `TARGET`, `ID_COL`, `SEED` from `config.py`; combines train and test for consistent encoding; applies the features from the plan above in order; encodes categoricals; splits back; saves `train_features.csv` and `test_features.csv`. Never fit encoders on the test rows — fit on train slice of the combined frame only.
 
 After each new batch of features, ask the user to re-run CV and report the score change.
 
 ### 4.4 Feature Importance
 
-After the first model run with engineered features, generate importance analysis:
-
-```python
-import lightgbm as lgb
-import pandas as pd
-import matplotlib.pyplot as plt
-
-# Assumes model is already trained (see Phase 5)
-fi = pd.DataFrame({
-    "feature": FEATURES,
-    "importance": model.feature_importances_
-}).sort_values("importance", ascending=False)
-
-print("Top 20 features:")
-print(fi.head(20).to_string())
-
-low_fi = fi[fi["importance"] < fi["importance"].quantile(0.1)]
-print(f"\nCandidates to drop ({len(low_fi)}): {low_fi['feature'].tolist()}")
-
-fi.head(30).plot(kind="barh", x="feature", y="importance", figsize=(8, 10))
-plt.gca().invert_yaxis()
-plt.title("Feature Importance")
-plt.tight_layout()
-plt.savefig("feature_importance.png", dpi=100)
-```
+After the first model run with engineered features, generate a feature importance bar chart (top 30) and print the bottom 10% by importance as drop candidates. Re-run CV after dropping and confirm the score holds or improves.
 
 Iterate: add features, check importance, drop noise, repeat.
 
@@ -739,101 +505,11 @@ For NLP/CV competitions, recommend pretrained model fine-tuning (DeBERTa, Effici
 
 ### 5.3 Training Script
 
-Generate a complete `train.py`:
-
-```python
-"""
-Model training — [Competition Name]
-Run: python train.py
-"""
-
-from config import TARGET, SEED, N_FOLDS, MODELS_DIR, METRIC
-import pandas as pd
-import numpy as np
-import lightgbm as lgb
-from sklearn.model_selection import StratifiedKFold, KFold
-from sklearn.metrics import roc_auc_score  # <- replace with competition metric
-
-# Load features (output of features.py)
-train_df = pd.read_csv("train_features.csv")
-test_df  = pd.read_csv("test_features.csv")
-
-FEATURES = [c for c in train_df.columns if c != TARGET]
-
-X = train_df[FEATURES]
-y = train_df[TARGET]
-X_test = test_df[FEATURES]
-
-# CV strategy — use StratifiedKFold for classification, KFold for regression
-N_SPLITS = 5
-kf = StratifiedKFold(n_splits=N_SPLITS, shuffle=True, random_state=42)
-
-oof_preds   = np.zeros(len(X))
-test_preds  = np.zeros(len(X_test))
-
-for fold, (tr_idx, val_idx) in enumerate(kf.split(X, y)):
-    print(f"\n── Fold {fold+1}/{N_SPLITS} ──")
-    X_tr, X_val = X.iloc[tr_idx], X.iloc[val_idx]
-    y_tr, y_val = y.iloc[tr_idx], y.iloc[val_idx]
-
-    model = lgb.LGBMClassifier(
-        n_estimators=2000,
-        learning_rate=0.05,
-        num_leaves=31,
-        min_child_samples=20,
-        subsample=0.8,
-        colsample_bytree=0.8,
-        random_state=42,
-        n_jobs=-1,
-    )
-    model.fit(
-        X_tr, y_tr,
-        eval_set=[(X_val, y_val)],
-        callbacks=[lgb.early_stopping(100, verbose=False), lgb.log_evaluation(200)],
-    )
-
-    oof_preds[val_idx]  = model.predict_proba(X_val)[:, 1]
-    test_preds         += model.predict_proba(X_test)[:, 1] / N_SPLITS
-
-cv_score = roc_auc_score(y, oof_preds)
-print(f"\n✅ CV Score: {cv_score:.5f}")
-
-# Save OOF + test preds for ensembling
-np.save("lgb_oof.npy",  oof_preds)
-np.save("lgb_test.npy", test_preds)
-
-# Save submission
-sub = pd.read_csv("./data/sample_submission.csv")
-sub.iloc[:, -1] = test_preds
-sub.to_csv("submission_lgb.csv", index=False)
-print("Saved: submission_lgb.csv")
-```
+Write `train.py` that: imports from `config.py`; uses the fold strategy from `references/model-templates.md` for this problem type; saves OOF predictions to `{model_name}_oof.npy` and test predictions to `{model_name}_test.npy`; prints CV score at the end. All models should follow this same output contract so they can be ensembled in Phase 6.
 
 ### 5.4 Hyperparameter Tuning
 
-When the user has a stable baseline and wants to squeeze more performance:
-
-```python
-import optuna
-
-def objective(trial):
-    params = {
-        "n_estimators": trial.suggest_int("n_estimators", 200, 3000),
-        "learning_rate": trial.suggest_float("lr", 0.01, 0.3, log=True),
-        "num_leaves": trial.suggest_int("num_leaves", 16, 256),
-        "min_child_samples": trial.suggest_int("min_child_samples", 5, 100),
-        "subsample": trial.suggest_float("subsample", 0.5, 1.0),
-        "colsample_bytree": trial.suggest_float("colsample_bytree", 0.4, 1.0),
-        "reg_alpha": trial.suggest_float("reg_alpha", 1e-8, 10.0, log=True),
-        "reg_lambda": trial.suggest_float("reg_lambda", 1e-8, 10.0, log=True),
-    }
-    # run CV with params, return cv_score
-    return cv_score
-
-study = optuna.create_study(direction="maximize")
-study.optimize(objective, n_trials=100, show_progress_bar=True)
-print("Best params:", study.best_params)
-```
+When the user has a stable baseline and wants to squeeze more performance, use Optuna with 50–100 trials on these params: `learning_rate`, `num_leaves`, `min_child_samples`, `subsample`, `colsample_bytree`, `reg_alpha`, `reg_lambda`. Stop when gains are < 0.001 per 20 trials. Log best params to `experiments.md`.
 
 ### 5.5 Overfitting Watch
 
@@ -860,57 +536,15 @@ Before ensembling, verify:
 
 ### 6.2 Diversity Check
 
-Check OOF correlation first — low correlation = better ensemble:
-
-```python
-import numpy as np, pandas as pd
-
-oofs = {
-    "lgb":  np.load("lgb_oof.npy"),
-    "xgb":  np.load("xgb_oof.npy"),
-    # add more
-}
-
-corr = pd.DataFrame(oofs).corr()
-print("OOF correlation:")
-print(corr.round(3))
-# Models with corr > 0.97 add very little — consider dropping
-```
+Before ensembling, compute the OOF correlation matrix. Models with correlation > 0.97 add little and should be excluded.
 
 ### 6.3 Ensemble Strategies
 
-**Simple Average** — best starting point, always try this first:
-```python
-oofs_list  = list(oofs.values())
-tests_list = [np.load(f"{name}_test.npy") for name in oofs]
+**Simple average:** Average OOF arrays, compute CV score, average test arrays for the submission file.
 
-blend_oof  = np.mean(oofs_list, axis=0)
-blend_test = np.mean(tests_list, axis=0)
-print(f"Blend CV: {roc_auc_score(y, blend_oof):.5f}")
-```
+**Weighted average:** Optimize weights on OOF using `scipy.optimize.minimize` with Nelder-Mead. Apply optimal weights to test preds.
 
-**Optimized Weighted Average** — finds the best weights on OOF:
-```python
-from scipy.optimize import minimize
-
-def neg_score(w):
-    w = np.array(w) / sum(w)
-    blend = sum(wi * oof for wi, oof in zip(w, oofs_list))
-    return -roc_auc_score(y, blend)
-
-result = minimize(neg_score, x0=[1/len(oofs_list)]*len(oofs_list),
-                  method="Nelder-Mead")
-opt_w = result.x / sum(result.x)
-print("Optimal weights:", dict(zip(oofs.keys(), opt_w.round(3))))
-```
-
-**Stacking** (advanced) — use OOF as features for a meta-learner:
-```python
-meta_X_train = np.column_stack(oofs_list)
-meta_X_test  = np.column_stack(tests_list)
-meta_model   = lgb.LGBMClassifier(n_estimators=200, learning_rate=0.05)
-# Fit meta_model on meta_X_train with y, predict on meta_X_test
-```
+**Stacking:** Stack OOF predictions as features for a lightweight meta-model (LGB with 200 estimators). Only use stacking if you have 3+ diverse models — otherwise weighted average is cleaner.
 
 ---
 
@@ -944,18 +578,13 @@ meta_model   = lgb.LGBMClassifier(n_estimators=200, learning_rate=0.05)
 
 ### 7.2 Verify Before Submitting
 
-```python
-sub  = pd.read_csv("./data/sample_submission.csv")
-mine = pd.read_csv("my_submission.csv")
+Before submitting, verify:
+- Shape matches `sample_submission.csv` exactly (same rows, same columns)
+- No NaN values in the prediction column
+- For probability outputs: all values are between 0 and 1
+- Column names are identical (case-sensitive)
 
-assert sub.shape == mine.shape,            f"Shape: {sub.shape} vs {mine.shape}"
-assert list(sub.columns) == list(mine.columns), "Column names don't match"
-assert mine.isnull().sum().sum() == 0,     "NaN values in submission"
-# For probability outputs:
-assert mine.iloc[:, -1].between(0, 1).all(), "Predictions outside [0,1]"
-
-print("✅ Submission looks good.")
-```
+If any check fails, do not submit — diagnose first.
 
 ### 7.3 Submission Strategy
 
