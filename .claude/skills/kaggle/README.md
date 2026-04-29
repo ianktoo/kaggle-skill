@@ -1,6 +1,6 @@
 # Kaggle Skill
 
-![Version](https://img.shields.io/badge/version-1.0.0-0ea5e9?style=flat-square)
+![Version](https://img.shields.io/badge/version-1.1.0-0ea5e9?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)
 ![Works with](https://img.shields.io/badge/works%20with-Claude%20Code%20%7C%20Claude.ai-3b82f6?style=flat-square)
 

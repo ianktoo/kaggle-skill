@@ -3,7 +3,7 @@ name: kaggle
 license: MIT
 metadata:
   author: "Ian Too (https://iantoo.space)"
-  version: "1.0.0"
+  version: "1.1.0"
 description: >
   A full end-to-end Kaggle competition skill. Use this skill whenever a user mentions a Kaggle competition, ML contest, data science challenge, or competitive modeling event — even casually (e.g., "I joined a Kaggle competition", "help me with this ML challenge", "I want to climb the leaderboard"). This skill guides a solo competitor or team through every phase: competition intake, dataset access, exploratory data analysis, feature engineering, model development, ensembling, and final submission. Adapts to the user's proficiency level. Works in Claude Code, Claude.ai, and any coding agent that supports skills. Trigger this skill even when the user only mentions one phase (e.g., "help me with EDA for my Kaggle comp") — always load the full skill to understand context and jump in at the right phase.
 ---
