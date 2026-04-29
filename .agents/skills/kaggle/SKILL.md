@@ -3,7 +3,7 @@ name: kaggle
 license: MIT
 metadata:
   author: "Ian Too (https://iantoo.space)"
-  version: "1.2.1"
+  version: "1.2.2"
 description: >
   A full end-to-end Kaggle competition skill. Use this skill whenever a user mentions a Kaggle competition, ML contest, data science challenge, or competitive modeling event — even casually (e.g., "I joined a Kaggle competition", "help me with this ML challenge", "I want to climb the leaderboard"). This skill guides a solo competitor or team through every phase: competition intake, dataset access, exploratory data analysis, feature engineering, model development, ensembling, and final submission. Adapts to the user's proficiency level. Works in Claude Code, Claude.ai, and any coding agent that supports skills. Trigger this skill even when the user only mentions one phase (e.g., "help me with EDA for my Kaggle comp") — always load the full skill to understand context and jump in at the right phase.
 ---
@@ -959,7 +959,7 @@ print("✅ Submission looks good.")
 
 ### 7.3 Submission Strategy
 
-Most Kaggle competitions allow **2 submissions per day** (some allow 5). Treat each one as a deliberate decision.
+Most Kaggle competitions allow **2–5 submissions per day** — check the competition rules for the exact limit. Treat each one as a deliberate decision.
 
 - **Minimum 2 per day rule** — if you have submissions available and you've made a meaningful change (new features, new model, better ensemble), use them. Don't hoard — idle submissions waste your clock.
 - **Never submit without a CV score** — if you can't measure it locally first, don't submit it.
