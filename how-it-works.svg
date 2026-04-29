@@ -1,0 +1,106 @@
+<svg width="880" height="330" viewBox="0 0 880 330" xmlns="http://www.w3.org/2000/svg"
+     font-family="'Segoe UI', Helvetica, Arial, sans-serif">
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="880" y2="330" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#f0f9ff"/>
+      <stop offset="50%"  stop-color="#ecfdf5"/>
+      <stop offset="100%" stop-color="#fefce8"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#00000014"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="880" height="330" rx="16" fill="url(#bg)" stroke="#e2e8f0" stroke-width="1.5"/>
+
+  <!-- Title -->
+  <text x="440" y="38" text-anchor="middle" fill="#1e293b" font-size="17" font-weight="700" letter-spacing="-0.3">How Kaggle Skill Works</text>
+  <text x="440" y="58" text-anchor="middle" fill="#64748b" font-size="12.5">Install the skill. Claude gets full competition context. You climb the leaderboard.</text>
+
+  <!-- Divider -->
+  <line x1="40" y1="74" x2="840" y2="74" stroke="#e2e8f0" stroke-width="1"/>
+
+  <!-- ═══════════════════ BOX 1: Install ═══════════════════ -->
+  <rect x="40" y="88" width="180" height="150" rx="12" fill="#ffffff" stroke="#bae6fd" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="40" y="88" width="180" height="3.5" rx="1.75" fill="#0ea5e9"/>
+
+  <!-- Data/file icon -->
+  <circle cx="130" cy="143" r="26" fill="#f0f9ff"/>
+  <rect x="116" y="129" width="28" height="36" rx="3" fill="#0ea5e9" opacity="0.12"/>
+  <rect x="116" y="129" width="28" height="36" rx="3" fill="none" stroke="#0ea5e9" stroke-width="1.5"/>
+  <path d="M134,129 L144,139 L134,139 Z" fill="#0ea5e9" opacity="0.25"/>
+  <path d="M134,129 L144,139" stroke="#0ea5e9" stroke-width="1.5"/>
+  <line x1="121" y1="149" x2="139" y2="149" stroke="#0ea5e9" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="121" y1="156" x2="139" y2="156" stroke="#0ea5e9" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+  <line x1="121" y1="163" x2="133" y2="163" stroke="#0ea5e9" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
+
+  <text x="130" y="196" text-anchor="middle" fill="#1e293b" font-size="13.5" font-weight="600">Install Skill</text>
+  <text x="130" y="213" text-anchor="middle" fill="#64748b" font-size="11">One command.</text>
+  <text x="130" y="228" text-anchor="middle" fill="#64748b" font-size="11">Claude Code, Claude.ai,</text>
+
+  <!-- ═══════════════════ ARROW 1 ═══════════════════ -->
+  <text x="285" y="158" text-anchor="middle" fill="#94a3b8" font-size="10" font-style="italic">context loads</text>
+  <line x1="228" y1="168" x2="342" y2="168" stroke="#7dd3fc" stroke-width="1.5" stroke-dasharray="5,4"/>
+  <polygon points="342,168 332,163 332,173" fill="#7dd3fc"/>
+
+  <!-- ═══════════════════ BOX 2: Claude ═══════════════════ -->
+  <rect x="350" y="88" width="180" height="150" rx="12" fill="#ffffff" stroke="#a7f3d0" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="350" y="88" width="180" height="3.5" rx="1.75" fill="#10b981"/>
+
+  <!-- Chart/sparkle icon for Claude -->
+  <circle cx="440" cy="143" r="26" fill="#ecfdf5"/>
+  <path d="M440,124 L443,136 L455,140 L443,144 L440,156 L437,144 L425,140 L437,136 Z" fill="#10b981"/>
+  <circle cx="440" cy="140" r="4.5" fill="#ffffff"/>
+
+  <text x="440" y="196" text-anchor="middle" fill="#1e293b" font-size="13.5" font-weight="600">Claude Knows</text>
+  <text x="440" y="213" text-anchor="middle" fill="#64748b" font-size="11">Metric, data, phases,</text>
+  <text x="440" y="228" text-anchor="middle" fill="#64748b" font-size="11">and modeling strategy.</text>
+
+  <!-- ═══════════════════ ARROW 2 ═══════════════════ -->
+  <text x="595" y="158" text-anchor="middle" fill="#94a3b8" font-size="10" font-style="italic">guides you</text>
+  <line x1="538" y1="168" x2="652" y2="168" stroke="#fde68a" stroke-width="1.5" stroke-dasharray="5,4"/>
+  <polygon points="652,168 642,163 642,173" fill="#fde68a"/>
+
+  <!-- ═══════════════════ BOX 3: Ship ═══════════════════ -->
+  <rect x="660" y="88" width="180" height="150" rx="12" fill="#ffffff" stroke="#fde68a" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="660" y="88" width="180" height="3.5" rx="1.75" fill="#f59e0b"/>
+
+  <!-- Trophy icon -->
+  <circle cx="750" cy="143" r="26" fill="#fefce8"/>
+  <path d="M740,128 L760,128 L758,144 Q750,152 742,144 Z" fill="#f59e0b"/>
+  <rect x="747" y="150" width="6" height="8" fill="#f59e0b"/>
+  <rect x="743" y="158" width="14" height="3" rx="1.5" fill="#f59e0b"/>
+  <circle cx="750" cy="136" r="4" fill="#ffffff" opacity="0.7"/>
+
+  <text x="750" y="196" text-anchor="middle" fill="#1e293b" font-size="13.5" font-weight="600">You Place</text>
+  <text x="750" y="213" text-anchor="middle" fill="#64748b" font-size="11">Intake to submission,</text>
+  <text x="750" y="228" text-anchor="middle" fill="#64748b" font-size="11">top of the leaderboard.</text>
+
+  <!-- ═══════════════════ PHASE PILLS ═══════════════════ -->
+  <text x="440" y="264" text-anchor="middle" fill="#94a3b8" font-size="9.5" font-weight="600" letter-spacing="1">7 PHASES COVERED</text>
+
+  <!-- pill w=107, gap=8, start x=42 -->
+  <rect x="42"  y="274" width="107" height="24" rx="12" fill="#f0f9ff" stroke="#bae6fd" stroke-width="1"/>
+  <text x="95.5"  y="290" text-anchor="middle" fill="#0369a1" font-size="11" font-weight="500">1  Intake</text>
+
+  <rect x="157" y="274" width="107" height="24" rx="12" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1"/>
+  <text x="210.5" y="290" text-anchor="middle" fill="#065f46" font-size="11" font-weight="500">2  EDA</text>
+
+  <rect x="272" y="274" width="107" height="24" rx="12" fill="#fefce8" stroke="#fde68a" stroke-width="1"/>
+  <text x="325.5" y="290" text-anchor="middle" fill="#854d0e" font-size="11" font-weight="500">3  Baseline</text>
+
+  <rect x="387" y="274" width="107" height="24" rx="12" fill="#fff7ed" stroke="#fed7aa" stroke-width="1"/>
+  <text x="440.5" y="290" text-anchor="middle" fill="#9a3412" font-size="11" font-weight="500">4  Features</text>
+
+  <rect x="502" y="274" width="107" height="24" rx="12" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1"/>
+  <text x="555.5" y="290" text-anchor="middle" fill="#4c1d95" font-size="11" font-weight="500">5  Models</text>
+
+  <rect x="617" y="274" width="107" height="24" rx="12" fill="#fdf2f8" stroke="#f9a8d4" stroke-width="1"/>
+  <text x="670.5" y="290" text-anchor="middle" fill="#9d174d" font-size="11" font-weight="500">6  Ensemble</text>
+
+  <rect x="732" y="274" width="107" height="24" rx="12" fill="#ecfdf5" stroke="#86efac" stroke-width="1"/>
+  <text x="785.5" y="290" text-anchor="middle" fill="#166534" font-size="11" font-weight="500">7  Submit</text>
+
+</svg>

@@ -1,0 +1,10 @@
+{
+  "version": "1.0.0",
+  "keywords": ["kaggle", "machine-learning", "data-science", "competition", "eda", "ml", "modeling", "ensemble", "feature-engineering", "lightgbm"],
+  "categories": ["data-science", "other"],
+  "author": {
+    "name": "Ian Too",
+    "github": "ianktoo"
+  },
+  "homepage": "https://iantoo.space"
+}
