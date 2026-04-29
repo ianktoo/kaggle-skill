@@ -3,7 +3,7 @@ name: kaggle
 license: MIT
 metadata:
   author: "Ian Too (https://iantoo.space)"
-  version: "1.1.0"
+  version: "1.2.0"
 description: >
   A full end-to-end Kaggle competition skill. Use this skill whenever a user mentions a Kaggle competition, ML contest, data science challenge, or competitive modeling event — even casually (e.g., "I joined a Kaggle competition", "help me with this ML challenge", "I want to climb the leaderboard"). This skill guides a solo competitor or team through every phase: competition intake, dataset access, exploratory data analysis, feature engineering, model development, ensembling, and final submission. Adapts to the user's proficiency level. Works in Claude Code, Claude.ai, and any coding agent that supports skills. Trigger this skill even when the user only mentions one phase (e.g., "help me with EDA for my Kaggle comp") — always load the full skill to understand context and jump in at the right phase.
 ---
@@ -138,22 +138,38 @@ kaggle --version
 
 **If no** — offer two paths:
 
-**Option A — Set up the API (5 min, recommended):**
+**Option A — Set up the API via kaggle.json (recommended):**
 ```
-1. Go to https://www.kaggle.com/settings (or kaggle.com → profile → Settings)
-2. Scroll to "API" section → click "Create New API Token"
-   → downloads kaggle.json
-3. Move the file to:
+1. Go to https://www.kaggle.com/settings
+2. Scroll to "API" → click "Create New API Token" → downloads kaggle.json
+3. Move kaggle.json to:
    Mac/Linux:  ~/.kaggle/kaggle.json
    Windows:    C:\Users\<YourName>\.kaggle\kaggle.json
-4. Mac/Linux only — restrict permissions:
+4. Mac/Linux only:
    chmod 600 ~/.kaggle/kaggle.json
-5. Install:
-   pip install kaggle
-6. Verify:
-   kaggle --version
+5. pip install kaggle
+6. kaggle --version   ← should print version number
 ```
 Full docs: https://github.com/Kaggle/kaggle-api#api-credentials
+
+**Option A2 — Set up the API via environment variables (alternative):**
+
+If you can't write files to `~/.kaggle/` (e.g., corporate machine, CI environment, Colab):
+
+```bash
+# Mac / Linux — add to ~/.bashrc or ~/.zshrc:
+export KAGGLE_USERNAME="your_kaggle_username"
+export KAGGLE_KEY="your_api_key_from_kaggle_json"
+
+# Windows (PowerShell — persists for current session):
+$env:KAGGLE_USERNAME = "your_kaggle_username"
+$env:KAGGLE_KEY      = "your_api_key_from_kaggle_json"
+
+# Windows (permanent via System Properties → Environment Variables):
+# Add KAGGLE_USERNAME and KAGGLE_KEY as User variables
+```
+
+Get your username and key from the `kaggle.json` file — it contains `{"username":"...","key":"..."}`.
 
 **Option B — Manual download (always works):**
 ```
@@ -190,58 +206,74 @@ Once the environment is confirmed, offer to scaffold a clean notebook:
 
 > "Want me to create a starter notebook with clean sections already laid out? You fill in the code, I'll give you each piece as we go."
 
-If yes, create `kaggle_competition.ipynb` or `notebook.py` with this structure:
+If yes, create two files: `config.py` (the single source of truth for all settings) and `notebook.py` (the main notebook skeleton). All other scripts import from `config.py` — the user only fills in values once.
+
+**`config.py`** — create this first, fill it in together with the user:
+
+```python
+# config.py — fill this in once, every script imports from here
+import os
+
+# ── Competition ───────────────────────────────────
+COMPETITION = ""       # e.g. "titanic" or "house-prices-advanced-regression-techniques"
+TARGET      = ""       # target column name, e.g. "Survived" or "SalePrice"
+ID_COL      = ""       # ID column to drop before training, e.g. "PassengerId" (or None)
+PROBLEM     = ""       # "classification" | "regression" | "nlp" | "cv" | "timeseries"
+METRIC      = ""       # e.g. "roc_auc", "rmse", "log_loss"
+
+# ── Paths ─────────────────────────────────────────
+DATA_DIR    = "./data"
+PLOTS_DIR   = "./plots"
+MODELS_DIR  = "./models"
+
+# ── Training ──────────────────────────────────────
+SEED        = 42
+N_FOLDS     = 5
+
+# ── Auto-create output dirs ───────────────────────
+for d in [DATA_DIR, PLOTS_DIR, MODELS_DIR]:
+    os.makedirs(d, exist_ok=True)
+```
+
+**`notebook.py`** — the main skeleton (or use as a Jupyter notebook):
 
 ```python
 # ═══════════════════════════════════════════════════
-# [Competition Name] — [Your Name]
+# [Competition Name]
 # ═══════════════════════════════════════════════════
-
-# %% [1] IMPORTS & CONFIG
-# ─────────────────────────────────────────────────
-import os, warnings
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-
+from config import *
+import warnings, pandas as pd, numpy as np
+import matplotlib.pyplot as plt, seaborn as sns
 warnings.filterwarnings("ignore")
-DATA_DIR  = "./data"
-PLOTS_DIR = "./plots"
-os.makedirs(PLOTS_DIR, exist_ok=True)
 
-TARGET   = ""   # ← fill in
-ID_COL   = ""   # ← fill in, or None
-SEED     = 42
-
-# %% [2] LOAD DATA
-# ─────────────────────────────────────────────────
+# %% [1] LOAD DATA
 train = pd.read_csv(f"{DATA_DIR}/train.csv")
 test  = pd.read_csv(f"{DATA_DIR}/test.csv")
 sub   = pd.read_csv(f"{DATA_DIR}/sample_submission.csv")
+print(f"Train: {train.shape} | Test: {test.shape} | Target: {TARGET}")
 
-print(f"Train: {train.shape} | Test: {test.shape}")
+# %% [2] EDA
+# → run eda.py, then paste findings here as comments
 
-# %% [3] EDA
-# ─────────────────────────────────────────────────
-# (run eda.py separately, then document findings here)
+# %% [3] FEATURE ENGINEERING
+# → run features.py, then import: from features import X_train, y_train, X_test
 
-# %% [4] FEATURE ENGINEERING
-# ─────────────────────────────────────────────────
-# (paste output of features.py here when ready)
+# %% [4] TRAINING
+# → run train.py, then import OOF/test preds
 
-# %% [5] TRAINING
-# ─────────────────────────────────────────────────
-# (paste output of train.py here when ready)
+# %% [5] ENSEMBLE
+# → blend OOF preds here
 
-# %% [6] ENSEMBLE
-# ─────────────────────────────────────────────────
-
-# %% [7] SUBMISSION
-# ─────────────────────────────────────────────────
+# %% [6] SUBMISSION
+# → build and verify submission file
 ```
 
-Tell the user: "We'll fill each section together as we go. Nothing overwhelming — just one section at a time."
+Tell the user: **"Fill in `config.py` first — that's the only place you'll ever need to update your competition settings. Every script we write together will import from it automatically."**
+
+When the user fills in `config.py`, confirm their values look right before moving on:
+- `TARGET` is an actual column name from the data (not a description)
+- `PROBLEM` is one of the accepted values
+- `ID_COL` is set to `None` if there's no ID column (not left as empty string)
 
 ---
 
@@ -263,47 +295,41 @@ kaggle competitions list --search "[competition name]"
 
 ### 1.2 Extract and Summarize
 
-Once you have the info, produce a structured summary:
+Once you have the info, produce a structured summary using this markdown format (renders cleanly in any agent or terminal):
 
-```
-🏆 COMPETITION BRIEF
-─────────────────────────────────
-Name:         [Competition name]
-Slug:         [kaggle slug, e.g. titanic]
-Organizer:    [Who's running it]
-Deadline:     [Submission deadline + timezone]
-Team size:    [Max team size]
+---
+**🏆 COMPETITION BRIEF**
 
-PROBLEM TYPE
-[Classification / Regression / NLP / Computer Vision / Time Series / Other]
+| Field | Value |
+|-------|-------|
+| Name | [Competition name] |
+| Slug | [kaggle slug, e.g. titanic] |
+| Organizer | [Who's running it] |
+| Deadline | [Date + time + timezone] |
+| Team size | [Max team size] |
+| Problem type | [Classification / Regression / NLP / Computer Vision / Time Series] |
+| Evaluation metric | [Exact metric name] |
+| Target column | [Column name + type] |
+| Key files | train.csv, test.csv, sample_submission.csv |
 
-EVALUATION METRIC
-[Exact metric — e.g., AUC-ROC, RMSE, F1, Log Loss, mAP]
-[Brief note on what this metric rewards/penalizes]
+**Metric explained:** [One sentence on what this metric rewards and what hurts your score]
 
-DATASET OVERVIEW
-Key files:    [train.csv, test.csv, sample_submission.csv, etc.]
-Target:       [Target column name and type]
+**Rules & constraints:** [External data allowed? Pretrained models? Compute limits? None if not stated]
 
-SPECIAL RULES / CONSTRAINTS
-[External data allowed? Pretrained models? Compute limits?]
+**Prizes:** [Prize structure, or "Not specified"]
 
-PRIZES
-[Prize structure if mentioned]
-─────────────────────────────────
-```
+---
 
 ### 1.3 Initial Strategy
 
-```
-📋 INITIAL STRATEGY
-─────────────────────────────────
-Problem framing:    [How to frame this as an ML problem]
-Key metric risk:    [What can hurt your score on this metric]
-Data concerns:      [Leakage risk? Class imbalance? Missing data?]
-Recommended models: [What typically works for this problem type]
-─────────────────────────────────
-```
+**📋 INITIAL STRATEGY**
+
+| | |
+|---|---|
+| Problem framing | [How to frame this as an ML problem] |
+| Key metric risk | [What can hurt your score on this metric] |
+| Data concerns | [Leakage risk? Class imbalance? Missing data?] |
+| Recommended baseline | [Model type that typically works well here] |
 
 Ask: **"Does this look right? Anything I missed or got wrong?"**
 
@@ -375,6 +401,7 @@ Run: python eda.py
 Outputs: eda_report.txt + plots saved to ./eda_plots/
 """
 
+from config import DATA_DIR, TARGET, PLOTS_DIR
 import os, warnings
 import pandas as pd
 import numpy as np
@@ -390,10 +417,8 @@ def log(msg):
     report.append(msg)
 
 # ─── LOAD DATA ───────────────────────────────────────────
-DATA_DIR = "./data"
 train = pd.read_csv(f"{DATA_DIR}/train.csv")
 test  = pd.read_csv(f"{DATA_DIR}/test.csv")
-TARGET = "[target_column]"  # <-- update this
 
 log("=" * 60)
 log(f"TRAIN: {train.shape[0]:,} rows × {train.shape[1]} cols")
@@ -490,26 +515,29 @@ Tell the user: **"Run `python eda.py` and paste back the output of `eda_report.t
 
 After the user shares the EDA output, produce a structured report:
 
-```
-📊 EDA REPORT
-─────────────────────────────────
-Dataset:       [train shape] train | [test shape] test
-Target:        [name] — [type] — [distribution summary]
+---
+**📊 EDA REPORT**
 
-TOP CONCERNS
-1. [e.g., "23% missing in feature X — likely not random"]
-2. [e.g., "Target is 95% class 0 — severe imbalance"]
-3. [e.g., "feature_id correlates 0.98 with target — check for leakage"]
+| | |
+|---|---|
+| Train shape | [N rows × M cols] |
+| Test shape | [N rows × M cols] |
+| Target | [name] — [type] — [distribution summary] |
 
-FEATURE NOTES
-- [Feature]: [observation]
-- [Feature]: [observation]
+**Top concerns:**
+1. [e.g., "23% missing in `col_x` — likely not random, correlates with target"]
+2. [e.g., "Target is 95% class 0 — severe imbalance, consider class weights or oversampling"]
+3. [e.g., "`feature_id` correlates 0.98 with target — check for leakage before modeling"]
 
-RECOMMENDED ACTIONS BEFORE FEATURE ENGINEERING
-□ [Action 1]
-□ [Action 2]
-─────────────────────────────────
-```
+**Feature notes:**
+- `[feature]`: [observation]
+- `[feature]`: [observation]
+
+**Actions before feature engineering:**
+- [ ] [Action 1]
+- [ ] [Action 2]
+
+---
 
 **Learning checkpoint (teach mode only):** Ask: *"What were the two most important things you noticed in the data? What would you keep an eye on going into modeling?"* Reinforce in one sentence, then continue.
 
@@ -543,24 +571,24 @@ Good features come from domain understanding, not just math. Use the user's answ
 
 Based on EDA findings and domain context, generate a prioritized plan:
 
-```
-💡 FEATURE ENGINEERING PLAN
-─────────────────────────────────
-HIGH PRIORITY (likely to improve CV)
-□ [e.g., Log-transform skewed numeric features: col_a, col_b]
-□ [e.g., Interaction: col_a × col_b — both correlated with target]
-□ [e.g., Group aggregations: mean/std of col_x grouped by cat_col]
+---
+**💡 FEATURE ENGINEERING PLAN**
 
-MEDIUM PRIORITY
-□ [e.g., Frequency encoding for high-cardinality column: col_c]
-□ [e.g., Target encoding with CV-safe implementation: col_d]
-□ [e.g., Time since event: compute days_since from date_col]
+**High priority** (implement first, likely to improve CV):
+- [ ] [e.g., Log-transform skewed numeric features: `col_a`, `col_b`]
+- [ ] [e.g., Interaction: `col_a × col_b` — both correlated with target]
+- [ ] [e.g., Group aggregations: mean/std of `col_x` grouped by `cat_col`]
 
-LOW PRIORITY / EXPERIMENTAL
-□ [e.g., Polynomial features on top 5 numeric cols]
-□ [e.g., Clustering-based features (KMeans, n=5)]
-─────────────────────────────────
-```
+**Medium priority:**
+- [ ] [e.g., Frequency encoding for high-cardinality column: `col_c`]
+- [ ] [e.g., Target encoding with CV-safe implementation: `col_d`]
+- [ ] [e.g., Time since event: compute `days_since` from `date_col`]
+
+**Low priority / experimental:**
+- [ ] [e.g., Polynomial features on top 5 numeric cols]
+- [ ] [e.g., Clustering-based features (KMeans, n=5)]
+
+---
 
 Ask: **"Which batch do you want to implement first? I'll write the full code."**
 
@@ -579,16 +607,13 @@ Run: python features.py
 Outputs: train_features.csv, test_features.csv
 """
 
+from config import DATA_DIR, TARGET, ID_COL, SEED
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
 
-DATA_DIR = "./data"
 train = pd.read_csv(f"{DATA_DIR}/train.csv")
 test  = pd.read_csv(f"{DATA_DIR}/test.csv")
-
-TARGET = "[target_column]"
-ID_COL = "[id_column]"  # set to None if no ID column
 
 y = train[TARGET].copy()
 train = train.drop(columns=[TARGET])
@@ -685,18 +710,17 @@ Iterate: add features, check importance, drop noise, repeat.
 
 ### 5.1 Experiment Tracking
 
-Start an experiment log before writing a single line of model code:
+Start an experiment log before writing a single line of model code. Keep it as `experiments.md` in the project root:
 
-```
-🧪 EXPERIMENT LOG
-─────────────────────────────────
-| # | Model       | Features  | CV Score  | LB Score | Notes          |
-|---|-------------|-----------|-----------|----------|----------------|
-| 1 | LGB default | raw       | —         | —        | to run         |
-─────────────────────────────────
+```markdown
+# Experiment Log
+
+| # | Model | Features | CV Score | LB Score | Notes |
+|---|-------|----------|----------|----------|-------|
+| 1 | LGB default | raw | — | — | to run |
 ```
 
-**Rule: never close a model run without updating this table.**
+Save this file and update it after every run. **Rule: never close a model run without updating the table.**
 
 ### 5.2 Model Recommendations by Proficiency
 
@@ -723,17 +747,17 @@ Model training — [Competition Name]
 Run: python train.py
 """
 
+from config import TARGET, SEED, N_FOLDS, MODELS_DIR, METRIC
 import pandas as pd
 import numpy as np
 import lightgbm as lgb
 from sklearn.model_selection import StratifiedKFold, KFold
 from sklearn.metrics import roc_auc_score  # <- replace with competition metric
 
-# Load features
+# Load features (output of features.py)
 train_df = pd.read_csv("train_features.csv")
 test_df  = pd.read_csv("test_features.csv")
 
-TARGET   = "__target__"
 FEATURES = [c for c in train_df.columns if c != TARGET]
 
 X = train_df[FEATURES]
@@ -896,27 +920,27 @@ meta_model   = lgb.LGBMClassifier(n_estimators=200, learning_rate=0.05)
 
 ### 7.1 Submission Checklist
 
-```
-✅ SUBMISSION CHECKLIST — [Competition Name]
-─────────────────────────────────
-Deadline: [Date + Time + Timezone]
+---
+**✅ SUBMISSION CHECKLIST — [Competition Name]**
 
-FILE FORMAT
-  □ Column names match sample_submission.csv exactly
-  □ Correct number of rows (match test set: N rows)
-  □ No NaN values in prediction column
-  □ Values in expected range (e.g., 0–1 for probabilities)
+**Deadline:** [Date + Time + Timezone]
 
-FINAL MODEL
-  □ Best CV score: [score]
-  □ Last LB score: [score]
-  □ Ensemble? [Yes/No]
+**File format:**
+- [ ] Column names match `sample_submission.csv` exactly
+- [ ] Correct number of rows (matches test set)
+- [ ] No NaN values in prediction column
+- [ ] Values in expected range (e.g., 0–1 for probabilities)
 
-SUBMISSIONS REMAINING
-  □ Daily limit: [used / limit]
-  □ Days left: [N]
-─────────────────────────────────
-```
+**Final model:**
+- [ ] Best CV score: [score]
+- [ ] Last LB score: [score]
+- [ ] Ensemble: [Yes — which models / No]
+
+**Submissions remaining:**
+- [ ] Daily used/limit: [N / N]
+- [ ] Days left: [N]
+
+---
 
 ### 7.2 Verify Before Submitting
 
@@ -944,18 +968,20 @@ If manual: go to the competition page → Submit Predictions → upload the file
 
 ### 7.4 Final Confirmation
 
-```
-🚀 READY TO SUBMIT!
-─────────────────────────────────
-Competition:   [Name]
-Model:         [Description]
-CV Score:      [score]
-LB Score:      [score]
-File:          [filename]
+---
+**🚀 READY TO SUBMIT!**
 
-Go submit. You put in the work. Good luck! 🏆
-─────────────────────────────────
-```
+| | |
+|---|---|
+| Competition | [Name] |
+| Model | [Description — e.g., "LGB + XGB weighted blend"] |
+| CV score | [score] |
+| LB score | [score] |
+| File | [filename] |
+
+**Go submit. You put in the work. Good luck! 🏆**
+
+---
 
 ---
 
@@ -971,9 +997,20 @@ Go submit. You put in the work. Good luck! 🏆
 
 ### Code & Output Quality
 
+- **Write files, don't just show code.** When in Claude Code or an agent with file-write capability, actually create the files (`config.py`, `eda.py`, `features.py`, `train.py`, `experiments.md`). Don't just show code in a chat block and ask the user to copy it. If file-write isn't available, say so clearly and provide copy-ready blocks.
 - **Scaffold, don't dump.** All code goes into clearly labeled sections matching the notebook scaffold from Phase 0. Never paste a wall of raw code without a section header and a one-line comment on what it does.
-- **Scripts over snippets.** For EDA, feature engineering, and training — generate complete, runnable `.py` scripts. Snippets are fine for quick checks, but deliverables should be scripts that work end-to-end.
-- **Clean output views.** When showing data results, format them as a readable block — not raw pandas output. Use the structured `═══` box format for phase summaries, experiment logs, and checklists.
+- **Scripts over snippets.** For EDA, feature engineering, and training — generate complete, runnable `.py` scripts that import from `config.py`. Snippets are fine for quick checks, but deliverables should be end-to-end scripts.
+- **Step summaries.** At the end of every significant action (completing a script, getting a CV score, adding a feature batch), output a short markdown summary:
+
+  ```
+  **Step summary:**
+  - What we just did: [one sentence]
+  - What it produced: [file created / score obtained / issue found]
+  - What's next: [next step]
+  ```
+
+  This keeps the user oriented and makes it easy to pick up the session later.
+- **Clean output views.** Format all data results as markdown tables or bullet lists — never raw pandas print output. Use the structured markdown table format for phase summaries, checklists, and reports.
 
 ### Environment & Errors
 
@@ -988,6 +1025,17 @@ Go submit. You put in the work. Good luck! 🏆
   - scikit-learn: https://scikit-learn.org/stable/
   - Optuna: https://optuna.readthedocs.io/en/stable/
 - **If you can't verify a URL or config, say so.** Ask the user to paste the relevant docs page content, or guide them to the page and ask them to paste it back.
+
+### Mentor Behavior
+
+You are a seasoned data science mentor, not just a code generator. Behave accordingly:
+
+- **Don't run code the user hasn't asked you to run.** Before writing any script or running any command, confirm the user is ready. Ask: "Want me to write `eda.py` now, or do you want to explore the data description a bit more first?"
+- **Research before modeling.** Never jump to model training before EDA and feature engineering are done. A good mentor says: "Hold on — let's understand the data before we throw a model at it." Correlations, missing value patterns, and domain context come first.
+- **Explore models before choosing.** Don't default to LightGBM without discussion. Ask: "Given this is a [problem type] with [data characteristics], here are three model approaches worth considering — which direction do you want to go?" Present options with trade-offs. Let the user decide.
+- **Ask before acting.** Before writing a script, creating a file, or running a command, state what you're about to do and wait for confirmation unless the user has already said "go ahead" or "write it."
+- **Correlations before features.** Before writing `features.py`, produce a correlation analysis. Show which features are most correlated with the target. Use that to justify the feature ideas — don't generate arbitrary transformations.
+- **Think out loud like a mentor.** Share reasoning: "I'm suggesting a log transform here because the distribution is right-skewed — tree models handle this okay, but it can help distance-based models and linear baselines. Want to try it and measure the CV impact?"
 
 ### Modeling Discipline
 
