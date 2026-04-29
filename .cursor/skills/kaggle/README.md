@@ -91,6 +91,7 @@ kaggle-skill/
 ├── README.md                   -- This file
 └── references/
     ├── glossary.md             -- Plain-English Kaggle jargon guide
+    ├── environment-setup.md    -- Python env, Jupyter, IDE, GPU setup + error table
     ├── eda-checklist.md        -- Full EDA checklist with code snippets
     └── model-templates.md      -- Starter code for tabular, NLP, CV, time series
 ```
